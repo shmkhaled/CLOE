@@ -1,0 +1,7 @@
+<KeynoteSpeaker, subClassOf, ConferenceContributor, 'E'>
+<ConferenceContributor, type, owl:Class, 'A'>
+<ConferenceContributor, subClassOf, Person, 'A'>
+<TutorialProposals, subClassOf, ConferencePart, 'E'>
+<ConferencePart, type, owl:Class, 'A'>
+<WorkshopProposals, subClassOf, ConferencePart, 'E'>
+<Track, subClassOf, ConferencePart, 'E'>
