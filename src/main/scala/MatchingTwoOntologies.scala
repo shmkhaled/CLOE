@@ -13,11 +13,16 @@ class MatchingTwoOntologies {
 //    sourceOntology.foreach(println(_))
 
     var tripelsForEnrichment: RDD[(String, String, String, Char)] = sourceOntology.keyBy(_._1).join(targetClassesWithoutURIs.zipWithIndex().keyBy(_._1)).map({case(a,((s,p,o),b))=> (s,p,o,'E')})
-//    println("##############################################")
-    var tiplesForAdd = tripelsForEnrichment.keyBy(_._3).join(sourceSubOntology.keyBy(_._1)).map({case(a,((b,c,d,e),(s,p,o)))=> (s,p,o,'A')}).distinct().cache()
-//    tiplesForAdd.foreach(println(_))
+//    println("############### Triples to enrich ###############################")
+//    tripelsForEnrichment.foreach(println(_))
+//    println("###########################################################")
+    var tripelsForAdd = tripelsForEnrichment.keyBy(_._3).join(sourceSubOntology.keyBy(_._1)).map({case(a,((b,c,d,e),(s,p,o)))=> (s,p,o,'A')}).union(sourceOntology.keyBy(_._3).join(targetClassesWithoutURIs.zipWithIndex().keyBy(_._1)).map({case(a,((s,p,o),b))=> (s,p,o,'A')})).distinct().cache()
+    tripelsForAdd = tripelsForAdd.keyBy(_._1).join(sourceSubOntology.keyBy(_._1)).map({case(a,((b,c,d,e),(s,p,o)))=> (s,p,o,'A')}).distinct().cache()
+//    println("############### Triples to add ###############################")
+//    tripelsForAdd.foreach(println(_))
+//    println("###########################################################")
 
-    tripelsForEnrichment = tripelsForEnrichment.union(tiplesForAdd)
+    tripelsForEnrichment = tripelsForEnrichment.union(tripelsForAdd)
 
     //.map({case(a,((s,p,o),b))=> if(!a.isEmpty()) (s,p,o,'E') else if (a.isEmpty()) (s,p,o,'A')})
     tripelsForEnrichment

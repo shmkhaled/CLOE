@@ -94,10 +94,10 @@ object Main {
 //    targetClasses.foreach(println(_))
 
     //####################### Translation #####################################
-      var targetClassesWithoutURIs: RDD[String] = targetOntology.map(y=>p.stringPreProcessing(y.getSubject.getLocalName)).distinct()//for ekaw-en, edas and SEO ontologies
+      var targetClassesWithoutURIs: RDD[String] = targetOntology.map(y=>p.stringPreProcessing(y.getSubject.getLocalName)).distinct().union(targetOntology.map{case(x)=> if(!x.getObject.isLiteral)(p.stringPreProcessing(x.getObject.getLocalName))else null}.filter(y => y != null && y != "class")).distinct()//for ekaw-en, edas and SEO ontologies
 //    var targetClassesWithoutURIs: RDD[String] = targetOntology.filter(x=>x.getPredicate.getLocalName == "label").map(y=>y.getObject.getLiteral.getLexicalForm.split("@").head)//for cmt-en, confOf-de and sigkdd-de ontologies
-//    println("All classes in the target ontology Triples:" + targetClassesWithoutURIs.count())
-//    targetClassesWithoutURIs.foreach(println(_))
+    println("All classes in the target ontology Triples:" + targetClassesWithoutURIs.count())
+    targetClassesWithoutURIs.foreach(println(_))
       var sourceClassesWithoutURIs = sourceOntology.filter(x=>x.getPredicate.getLocalName == "label").map(y=>y.getObject.getLiteral.getLexicalForm.split("@").head).distinct().collect()
 //      println("All classes in the source ontology Triples:" + sourceClassesWithoutURIs.size)
 //      sourceClassesWithoutURIs.foreach(println(_))
@@ -145,16 +145,16 @@ val validSourceTranslationsByExperts: RDD[(String, String)] = sparkSession1.spar
     println("####################### Recreating the source ontologyTriples #####################################")
     val sor = new SourceOntologyReconstruction()
     var translatedSourceOntology = sor.ReconstructOntology(preProcessedSourceOntology,validSourceTranslationsByExperts).filter(x=>x._2 != "disjointWith").cache()
-//    println("Source Ontology after translating subject and object classes "+ translatedSourceOntology.count())
-//    translatedSourceOntology.foreach(println(_))
-
+//
+    println("Source Ontology after translating subject and object classes "+ translatedSourceOntology.count())
+    translatedSourceOntology.distinct().foreach(println(_))
     //############# ExactMatching #################
     println("####################### Matching Two Ontologies #######################")
     var targetOntologyWithoutURI: RDD[(String, String, String)] = targetOntology.map{case(x)=> if (x.getObject.isLiteral)(p.stringPreProcessing(x.getSubject.getLocalName),x.getPredicate.getLocalName,p.stringPreProcessing(x.getObject.getLiteral.toString))else (p.stringPreProcessing(x.getSubject.getLocalName),x.getPredicate.getLocalName,p.stringPreProcessing(x.getObject.getLocalName))}//.filter(x=>x._2 != "type" || x._2 != "comment")
-//    println("Target ontology without URIs")
-//    targetOntologyWithoutURI.foreach(println(_))
+    println("Target ontology without URIs")
+    targetOntologyWithoutURI.foreach(println(_))
     val m = new MatchingTwoOntologies()
-    var tripelsForEnrichment: RDD[(String, String, String, Char)] = m.Match(translatedSourceOntology,targetOntologyWithoutURI, targetClassesWithoutURIs).cache()
+    var tripelsForEnrichment: RDD[(String, String, String, Char)] = m.Match(translatedSourceOntology,targetOntologyWithoutURI, targetClassesWithoutURIs).distinct().cache()
     println("####################### source triples needed for enrichment #######################")
     println(tripelsForEnrichment.count()+ " triples. Triples with flag 'E' are needed to enrich the target ontology. Triples with flag 'A' are new triples will be added to the target ontology.")
     tripelsForEnrichment.foreach(println(_))
@@ -175,7 +175,10 @@ val validSourceTranslationsByExperts: RDD[(String, String)] = sparkSession1.spar
  triplesToBeAddedToTarget.foreach(println(_))
 
                          */
+//    var targetClassesWithoutURIssssss: RDD[String] = targetOntology.map{case(x)=> if(!x.getObject.isLiteral)(p.stringPreProcessing(x.getObject.getLocalName))else null}.filter(y => y != null && y != "class").distinct()
 
+//    println("############## try #############"+targetClassesWithoutURIssssss.count())
+//    targetClassesWithoutURIssssss.foreach(println(_))
     val endTimeMillis = System.currentTimeMillis()
     val durationSeconds = (endTimeMillis - startTimeMillis) / 1000
     println("runtime = "+durationSeconds+ " seconds")
